@@ -3,14 +3,14 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event session-start",
+        "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { [ -x \"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\" ] && { export ELECTRON_RUN_AS_NODE=1; N=\"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\"; }; }; [ -x \"$N\" ] || { printf '{}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event session-start",
         "timeout": 10
       }
     ],
     "PreInvocation": [
       {
         "type": "command",
-        "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event prompt-submit",
+        "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { [ -x \"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\" ] && { export ELECTRON_RUN_AS_NODE=1; N=\"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\"; }; }; [ -x \"$N\" ] || { printf '{}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event prompt-submit",
         "timeout": 10
       }
     ],
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event post-connector",
+            "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { [ -x \"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\" ] && { export ELECTRON_RUN_AS_NODE=1; N=\"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\"; }; }; [ -x \"$N\" ] || { printf '{}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event post-connector",
             "timeout": 10
           }
         ]
@@ -29,7 +29,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{\"decision\":\"stop\"}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event turn-stop",
+        "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { [ -x \"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\" ] && { export ELECTRON_RUN_AS_NODE=1; N=\"/Applications/Antigravity IDE.app/Contents/MacOS/Electron\"; }; }; [ -x \"$N\" ] || { printf '{\"decision\":\"stop\"}\\n'; exit 0; }; exec \"$N\" ./hooks/symea-hook-runner.mjs --platform antigravity --event turn-stop",
         "timeout": 15
       }
     ]

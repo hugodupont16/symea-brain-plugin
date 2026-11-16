@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, statSync, openSync, readSync, closeSync, writeSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { chmodSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 const DEFAULT_URL = 'https://symea-brain-239495878487.europe-west2.run.app';
 const SYMEA_TOOL_TAIL_RE = /^(authenticated_context|conversation_capture_report|search_memory|get_memory|inspect_schema|memory_history|get_relationships|schema_change_requests|audit_trail|hybrid_search|get_document|get_documents_batch|get_document_download_url|lookup_sku|search_compliance_dops|check_dnc_account|get_market_indices|list_conflicts|list_topic_dossiers|get_topic_dossier|capture_memory|preview_conversation_capture|commit_conversation_capture|correct_memory|link_entities|request_schema_change|upsert_pim_sku|ingest_document|upsert_dnc_account|record_conflict|resolve_conflict|capture_compartment_note|upsert_topic_dossier|hook_prompt_submit|hook_post_connector|hook_turn_stop|list_auto_inbox|review_auto_inbox)$/;
@@ -52,6 +53,67 @@ function readHookConfig() {
     token: String(process.env.SYMEA_BRAIN_HOOK_TOKEN || fileCfg.token || '').trim(),
     url: String(process.env.SYMEA_BRAIN_URL || fileCfg.url || DEFAULT_URL).trim().replace(/\/+$/, '')
   };
+}
+
+function hookCfgDir() {
+  return dirname(process.env.SYMEA_HOOK_CONFIG_PATH || join(homedir(), '.config', 'symea-brain', 'hook-token.json'));
+}
+
+function saveHookTokenFile(token, url) {
+  const dir = hookCfgDir();
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const p = process.env.SYMEA_HOOK_CONFIG_PATH || join(dir, 'hook-token.json');
+  writeFileSync(p, `${JSON.stringify({ token, url }, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+  try { chmodSync(p, 0o600); } catch {}
+}
+
+async function pollPendingDevice(pendingP, pObj) {
+  try {
+    const pr = await fetch(`${pObj.url}/api/hooks/device/poll`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ poll_ticket: pObj.poll_ticket }), signal: AbortSignal.timeout(2500)
+    });
+    if (pr.status === 410) { rmSync(pendingP, { force: true }); return { token: '' }; }
+    if (!pr.ok) return { token: '' };
+    const pj = await pr.json();
+    if (pj.status === 'approved' && pj.token) {
+      saveHookTokenFile(pj.token, pObj.url);
+      rmSync(pendingP, { force: true });
+      return { token: pj.token, url: pObj.url };
+    }
+  } catch {}
+  return { token: '' };
+}
+
+async function tryDeviceAuth({ platform, event, url }) {
+  if ((process.env.SYMEA_DISABLE_AUTO_AUTH === '1' || process.env.CI || process.env.NODE_TEST_CONTEXT) && process.env.SYMEA_FORCE_DEVICE_AUTH !== '1') return { token: '' };
+  const dir = hookCfgDir();
+  const pendingP = join(dir, 'pending-device.json');
+  const nowSec = Math.floor(Date.now() / 1000);
+  let pending = null;
+  try { if (existsSync(pendingP)) pending = JSON.parse(readFileSync(pendingP, 'utf8')); } catch {}
+  if (pending?.poll_ticket && Number(pending.exp || 0) > nowSec) {
+    return await pollPendingDevice(pendingP, pending);
+  }
+  if (pending) rmSync(pendingP, { force: true });
+  if (event !== 'session-start' || process.platform !== 'darwin') return { token: '' };
+  try {
+    const sr = await fetch(`${url}/api/hooks/device/start`, { method: 'POST', signal: AbortSignal.timeout(2500) });
+    if (!sr.ok) return { token: '' };
+    const sj = await sr.json();
+    const nextP = { poll_ticket: sj.poll_ticket, url, exp: nowSec + Number(sj.expires_in_seconds || 900) };
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    writeFileSync(pendingP, JSON.stringify(nextP), { encoding: 'utf8', mode: 0o600 });
+    try { chmodSync(pendingP, 0o600); } catch {}
+    if (process.env.SYMEA_DISABLE_OPEN !== '1') spawn('open', [sj.approve_url], { detached: true, stdio: 'ignore' }).unref();
+    await new Promise(r => setTimeout(r, 3000));
+    const quick = await pollPendingDevice(pendingP, nextP);
+    if (quick.token) return quick;
+    const msg = 'Symea Brain: browser tab opened — click Approve once to activate automatic hooks.';
+    return { token: '', notice: platform === 'antigravity' ? { injectSteps: [{ systemMessage: { systemMessage: msg } }] } : { continue: true, systemMessage: msg } };
+  } catch {
+    return { token: '' };
+  }
 }
 
 function extractTailFromTranscript(transcriptPath) {
@@ -143,10 +205,15 @@ async function main() {
     }
   }
 
-  const { token, url } = readHookConfig();
+  let { token, url } = readHookConfig();
   if (!token) {
-    writeOut(noop);
-    return process.exit(0);
+    const auth = await tryDeviceAuth({ platform, event, url });
+    token = auth.token || '';
+    if (auth.url) url = auth.url;
+    if (!token) {
+      writeOut(auth.notice || noop);
+      return process.exit(0);
+    }
   }
 
   const outbound = { ...payload };
