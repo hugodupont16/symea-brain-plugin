@@ -2,7 +2,10 @@
   "mcpServers": {
     "symea-brain": {
       "type": "http",
-      "url": "https://symea-brain-239495878487.europe-west2.run.app/mcp/symea"
+      "url": "https://symea-brain-239495878487.europe-west2.run.app/mcp/symea",
+      "oauth": {
+        "clientId": "2551b198-80d9-42bc-9f2c-b771d791d998"
+      }
     }
   }
 }

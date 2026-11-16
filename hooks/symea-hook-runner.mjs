@@ -89,7 +89,7 @@ function detectPlatform(args, payload) {
   const p = String(args.platform || process.env.SYMEA_HOOK_PLATFORM || '').toLowerCase();
   if (['codex', 'claude', 'antigravity'].includes(p)) return p;
   if (payload && (payload.hookEventName || payload.conversationId || 'lastUserInput' in payload)) return 'antigravity';
-  if (process.env.PLUGIN_DATA || process.env.CODEX_HOME) return 'codex';
+  if (process.env.PLUGIN_DATA || process.env.CODEX_HOME || process.env.CODEX_CI || process.env.CODEX_THREAD_ID || String(process.env.CLAUDE_PLUGIN_ROOT || '').includes('/.codex/')) return 'codex';
   if (process.env.CLAUDE_PLUGIN_ROOT || process.env.CLAUDE_PROJECT_DIR) return 'claude';
   return 'claude';
 }
