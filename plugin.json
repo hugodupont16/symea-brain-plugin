@@ -1,0 +1,44 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "symea-brain",
+  "version": "2.3.1",
+  "description": "Symea Group compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+  "author": {
+    "name": "Symea Group",
+    "url": "https://symea-brain-239495878487.europe-west2.run.app"
+  },
+  "homepage": "https://github.com/hugodupont16/symea-brain-plugin",
+  "repository": "https://github.com/hugodupont16/symea-brain-plugin",
+  "keywords": [
+    "symea",
+    "knowledge-graph",
+    "pim",
+    "compliance",
+    "hooks"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Symea Brain",
+        "shortDescription": "Symea 5-Org Knowledge & Hooks",
+        "longDescription": "Compartment-governed multi-org hybrid knowledge graph, Living Dossiers, trilingual PIM, compliance vault, DNC outbound guard, and automatic lifecycle hook capture.",
+        "developerName": "Symea Group",
+        "category": "Business & Operations",
+        "capabilities": [
+          "Interactive",
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://symea-brain-239495878487.europe-west2.run.app",
+        "defaultPrompt": [
+          "Search Symea Brain topic dossiers and product specs",
+          "Check outbound compliance before drafting copy",
+          "Review staged Auto-Inbox decisions"
+        ],
+        "brandColor": "#030D18",
+        "composerIcon": "./assets/codex-icon.png",
+        "logo": "./assets/logo.png"
+      }
+    }
+  }
+}

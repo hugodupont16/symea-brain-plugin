@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "symea-brain-plugin",
+  "description": "Symea Group compartment-governed corporate brain and lifecycle hooks plugin.",
+  "owner": {
+    "name": "Symea Group",
+    "url": "https://symea-brain-239495878487.europe-west2.run.app"
+  },
+  "plugins": [
+    {
+      "name": "symea-brain",
+      "description": "Symea Group compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

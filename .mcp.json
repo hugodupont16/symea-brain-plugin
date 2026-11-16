@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "symea-brain": {
+      "type": "http",
+      "url": "https://symea-brain-239495878487.europe-west2.run.app/mcp/symea"
+    }
+  }
+}

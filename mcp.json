@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "symea-brain": {
+      "type": "streamable-http",
+      "url": "https://symea-brain-239495878487.europe-west2.run.app/mcp/symea",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "provided",
+              "clientId": "d2367850-60e3-4321-9a3c-a82aaee058da"
+            }
+          }
+        }
+      }
+    }
+  }
+}

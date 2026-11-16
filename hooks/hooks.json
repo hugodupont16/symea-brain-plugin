@@ -1,0 +1,66 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; exec \"$N\" \"${PLUGIN_ROOT}/hooks/symea-hook-runner.mjs\" --platform codex --event session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "symea-brain",
+            "tool": "hook_prompt_submit",
+            "input": {
+              "prompt": "${prompt}"
+            },
+            "timeout": 10,
+            "statusMessage": "Retrieving Symea Brain context..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "symea-brain",
+            "tool": "hook_post_connector",
+            "input": {
+              "tool_name": "${tool_name}",
+              "tool_input": "${tool_input}",
+              "tool_response": "${tool_response}"
+            },
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "symea-brain",
+            "tool": "hook_turn_stop",
+            "input": {
+              "stop_hook_active": "${stop_hook_active}",
+              "prompt": "${prompt}",
+              "last_assistant_message": "${last_assistant_message}"
+            },
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
