@@ -2,11 +2,13 @@
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
             "command": "R=\"${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT:-}}\"; [ -f \"$R/hooks/symea-hook-runner.mjs\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; exec \"$N\" \"$R/hooks/symea-hook-runner.mjs\" --event session-start",
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "Loading Symea Brain session..."
           }
         ]
       }
@@ -17,7 +19,8 @@
           {
             "type": "command",
             "command": "R=\"${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT:-}}\"; [ -f \"$R/hooks/symea-hook-runner.mjs\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; exec \"$N\" \"$R/hooks/symea-hook-runner.mjs\" --event prompt-submit",
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "Retrieving Symea Brain context..."
           }
         ]
       }
@@ -29,7 +32,8 @@
           {
             "type": "command",
             "command": "R=\"${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT:-}}\"; [ -f \"$R/hooks/symea-hook-runner.mjs\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; exec \"$N\" \"$R/hooks/symea-hook-runner.mjs\" --event post-connector",
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "Scanning connector output for Symea Brain..."
           }
         ]
       }
@@ -40,7 +44,8 @@
           {
             "type": "command",
             "command": "R=\"${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT:-}}\"; [ -f \"$R/hooks/symea-hook-runner.mjs\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; N=$(command -v node || ls /opt/homebrew/bin/node /usr/local/bin/node \"$HOME\"/.nvm/versions/node/*/bin/node 2>/dev/null | head -n1); [ -x \"$N\" ] || { printf '{\"continue\":true}\\n'; exit 0; }; exec \"$N\" \"$R/hooks/symea-hook-runner.mjs\" --event turn-stop",
-            "timeout": 15
+            "timeout": 15,
+            "statusMessage": "Checking turn for Symea Brain decisions..."
           }
         ]
       }
