@@ -11,3 +11,4 @@ description: Use when answering corporate technical, commercial, compliance, Liv
 4. Before drafting external outreach copy, call `check_dnc_account` and follow OEM and compartment isolation rules enforced by the MCP server. Match personal tone via `get_own_voice_profile` when appropriate.
 5. After delivering any draft (email, quote, deck, SOP, memo), invite a quick 1-to-10 rating + strengths/weaknesses pushback interview, then capture feedback via `record_skill_feedback` or `distill_artifact_to_playbook`.
 6. Use `run_sop_agent` / `export_agent_pack` for Rung 2/3 shadow validation, and `list_auto_inbox` / `review_auto_inbox` to promote confirmed facts to Layer 1.
+7. If you hit a missing schema, bug, or access gap, call `submit_brain_feedback` so Hugo / Empra can resolve it directly.
