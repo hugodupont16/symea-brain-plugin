@@ -1,4 +1,4 @@
-# Symea Brain Plugin (v2.3.1)
+# Symea Brain Plugin (v3.0.0)
 
 Zero-secret client plugin for ChatGPT/Codex, Claude Code/Desktop, and Antigravity.
 Connects to `https://symea-brain-239495878487.europe-west2.run.app/mcp/symea` with OAuth 2.1 + PKCE.

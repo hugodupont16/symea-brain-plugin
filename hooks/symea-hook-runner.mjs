@@ -5,7 +5,7 @@ import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 const DEFAULT_URL = 'https://symea-brain-239495878487.europe-west2.run.app';
-const SYMEA_TOOL_TAIL_RE = /^(authenticated_context|conversation_capture_report|search_memory|get_memory|inspect_schema|memory_history|get_relationships|schema_change_requests|audit_trail|hybrid_search|get_document|get_documents_batch|get_document_download_url|lookup_sku|search_compliance_dops|check_dnc_account|get_market_indices|list_conflicts|list_topic_dossiers|get_topic_dossier|capture_memory|preview_conversation_capture|commit_conversation_capture|correct_memory|link_entities|request_schema_change|upsert_pim_sku|ingest_document|upsert_dnc_account|record_conflict|resolve_conflict|capture_compartment_note|upsert_topic_dossier|hook_prompt_submit|hook_post_connector|hook_turn_stop|list_auto_inbox|review_auto_inbox)$/;
+const SYMEA_TOOL_TAIL_RE = /^(authenticated_context|conversation_capture_report|search_memory|get_memory|inspect_schema|memory_history|get_relationships|schema_change_requests|audit_trail|hybrid_search|get_document|get_documents_batch|get_document_download_url|lookup_sku|search_compliance_dops|check_dnc_account|get_market_indices|list_conflicts|list_topic_dossiers|get_topic_dossier|capture_memory|preview_conversation_capture|commit_conversation_capture|correct_memory|link_entities|request_schema_change|upsert_pim_sku|ingest_document|upsert_dnc_account|record_conflict|resolve_conflict|capture_compartment_note|upsert_topic_dossier|hook_prompt_submit|hook_post_connector|hook_turn_stop|list_auto_inbox|review_auto_inbox|setup_local_hooks|list_skill_trees|get_skill_tree|run_skill_formula|list_skill_proposals|distill_artifact_to_playbook|upsert_skill_node|review_skill_proposal|rollback_skill_revision|record_skill_feedback|run_sop_agent|export_agent_pack)$/;
 const LOCAL_NOISE_RE = /^(read_file|write_file|edit_file|view_file|write_to_file|replace_file_content|multi_replace_file_content|list_dir|find_by_name|grep_search|run_command|command_status|send_command_input|read_terminal|task_boundary|notify_user|manage_task|schedule|ask_question|Read|Write|Edit|MultiEdit|Glob|Grep|LS|Bash|Agent|Task|TodoWrite|NotebookEdit|apply_patch|shell|exec_command|write_stdin)$/;
 
 function parseArgs(argv) {
@@ -109,7 +109,7 @@ async function tryDeviceAuth({ platform, event, url }) {
     await new Promise(r => setTimeout(r, 3000));
     const quick = await pollPendingDevice(pendingP, nextP);
     if (quick.token) return quick;
-    const msg = 'Symea Brain: browser tab opened — click Approve once to activate automatic hooks.';
+    const msg = 'Symea Brain: browser tab opened. Click Approve once to activate automatic hooks.';
     return { token: '', notice: platform === 'antigravity' ? { injectSteps: [{ systemMessage: { systemMessage: msg } }] } : { continue: true, systemMessage: msg } };
   } catch {
     return { token: '' };
@@ -216,11 +216,29 @@ async function main() {
     }
   }
 
+  const statePath = join(hookCfgDir(), 'session-state.json');
+  const readSticky = () => {
+    try { return existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : {}; } catch { return {}; }
+  };
+  const writeSticky = st => {
+    try { mkdirSync(hookCfgDir(), { recursive: true, mode: 0o700 }); writeFileSync(statePath, JSON.stringify(st), { encoding: 'utf8', mode: 0o600 }); } catch {}
+  };
+
   const outbound = { ...payload };
-  if (event === 'turn-stop' && (!outbound.last_assistant_message || (!outbound.prompt && !outbound.lastUserInput))) {
-    const tail = extractTailFromTranscript(outbound.transcript_path || outbound.transcriptPath);
-    if (!outbound.last_assistant_message && tail.lastAssistant) outbound.last_assistant_message = tail.lastAssistant;
-    if (!outbound.prompt && !outbound.lastUserInput && tail.lastUser) outbound.prompt = tail.lastUser;
+  const sticky = readSticky();
+  if (event === 'turn-stop') {
+    if (Number(sticky.turns_left || 0) > 0) {
+      if (sticky.last_org_slug && !outbound.sticky_org_slug) outbound.sticky_org_slug = sticky.last_org_slug;
+      if (sticky.last_skill_slug && !outbound.sticky_skill_slug) outbound.sticky_skill_slug = sticky.last_skill_slug;
+      if (sticky.last_node_path && !outbound.sticky_node_path) outbound.sticky_node_path = sticky.last_node_path;
+      if (sticky.session_key && !outbound.session_key) outbound.session_key = sticky.session_key;
+      writeSticky({ ...sticky, turns_left: Math.max(0, Number(sticky.turns_left) - 1) });
+    }
+    if (!outbound.last_assistant_message || (!outbound.prompt && !outbound.lastUserInput)) {
+      const tail = extractTailFromTranscript(outbound.transcript_path || outbound.transcriptPath);
+      if (!outbound.last_assistant_message && tail.lastAssistant) outbound.last_assistant_message = tail.lastAssistant;
+      if (!outbound.prompt && !outbound.lastUserInput && tail.lastUser) outbound.prompt = tail.lastUser;
+    }
   }
 
   try {
@@ -235,6 +253,21 @@ async function main() {
       return process.exit(0);
     }
     const json = await res.json();
+    if (event === 'prompt-submit') {
+      const txt = JSON.stringify(json || {});
+      const sm = /SKILL TREE \[([a-z0-9_-]+)/i.exec(txt);
+      const om = /\[(symea|syskern|amplify|elendil|unikkern)\//i.exec(txt);
+      const nm = /(branches\/[a-z0-9._/-]+\.md|formulas\/[a-z0-9._/-]+\.js)/i.exec(txt);
+      if (sm || om || nm) {
+        writeSticky({
+          last_org_slug: om ? om[1] : (sticky.last_org_slug || 'symea'),
+          last_skill_slug: sm ? sm[1] : (sticky.last_skill_slug || null),
+          last_node_path: nm ? nm[1] : (sticky.last_node_path || null),
+          session_key: outbound.session_id || outbound.conversationId || sticky.session_key || null,
+          turns_left: 6
+        });
+      }
+    }
     writeOut(json && typeof json === 'object' ? json : noop);
   } catch {
     writeOut(noop);
