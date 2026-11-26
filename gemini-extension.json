@@ -1,0 +1,15 @@
+{
+  "name": "symea-brain",
+  "version": "3.7.0",
+  "description": "SOL6 Brain compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "symea-brain": {
+      "httpUrl": "https://brain.sol6.io/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SYMEA_MCP_TOKEN}"
+      },
+      "timeout": 60000
+    }
+  }
+}

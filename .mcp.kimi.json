@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "symea-brain": {
+      "url": "https://brain.sol6.io/mcp",
+      "bearerTokenEnvVar": "SYMEA_MCP_TOKEN"
+    }
+  }
+}

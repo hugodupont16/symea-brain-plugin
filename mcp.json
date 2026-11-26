@@ -3,7 +3,7 @@
   "mcpServers": {
     "symea-brain": {
       "type": "streamable-http",
-      "url": "https://symea-brain-239495878487.europe-west2.run.app/mcp/symea"
+      "url": "https://brain.sol6.io/mcp/symea"
     }
   }
 }

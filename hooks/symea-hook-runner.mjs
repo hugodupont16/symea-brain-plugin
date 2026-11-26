@@ -4,9 +4,9 @@ import { chmodSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, re
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-const DEFAULT_URL = 'https://symea-brain-239495878487.europe-west2.run.app';
-const SYMEA_TOOL_TAIL_RE = /^(authenticated_context|conversation_capture_report|search_memory|get_memory|inspect_schema|memory_history|get_relationships|schema_change_requests|audit_trail|hybrid_search|get_document|get_documents_batch|get_document_download_url|lookup_sku|search_compliance_dops|check_dnc_account|get_market_indices|list_conflicts|list_topic_dossiers|get_topic_dossier|capture_memory|preview_conversation_capture|commit_conversation_capture|correct_memory|link_entities|request_schema_change|upsert_pim_sku|ingest_document|upsert_dnc_account|record_conflict|resolve_conflict|capture_compartment_note|upsert_topic_dossier|hook_prompt_submit|hook_post_connector|hook_turn_stop|list_auto_inbox|review_auto_inbox|setup_local_hooks|list_skill_trees|get_skill_tree|run_skill_formula|list_skill_proposals|distill_artifact_to_playbook|upsert_skill_node|review_skill_proposal|rollback_skill_revision|record_skill_feedback|run_sop_agent|export_agent_pack)$/;
-const LOCAL_NOISE_RE = /^(read_file|write_file|edit_file|view_file|write_to_file|replace_file_content|multi_replace_file_content|list_dir|find_by_name|grep_search|run_command|command_status|send_command_input|read_terminal|task_boundary|notify_user|manage_task|schedule|ask_question|Read|Write|Edit|MultiEdit|Glob|Grep|LS|Bash|Agent|Task|TodoWrite|NotebookEdit|apply_patch|shell|exec_command|write_stdin)$/;
+const DEFAULT_URL = 'https://brain.sol6.io';
+const SYMEA_TOOL_TAIL_RE = /^(authenticated_context|conversation_capture_report|search_memory|get_memory|inspect_schema|memory_history|get_relationships|schema_change_requests|audit_trail|hybrid_search|get_document|get_documents_batch|get_document_download_url|lookup_sku|search_compliance_dops|check_dnc_account|get_market_indices|list_conflicts|list_topic_dossiers|get_topic_dossier|capture_memory|preview_conversation_capture|commit_conversation_capture|correct_memory|link_entities|request_schema_change|upsert_pim_sku|ingest_document|upsert_dnc_account|record_conflict|resolve_conflict|capture_compartment_note|upsert_topic_dossier|hook_prompt_submit|hook_post_connector|hook_turn_stop|list_auto_inbox|review_auto_inbox|setup_local_hooks|list_skill_trees|get_skill_tree|run_skill_formula|list_skill_proposals|distill_artifact_to_playbook|upsert_skill_node|review_skill_proposal|rollback_skill_revision|record_skill_feedback|run_sop_agent|export_agent_pack|submit_brain_feedback|list_brain_feedback|resolve_brain_feedback|upsert_executive_mission|list_executive_missions|get_executive_mission|synthesize_executive_mission|list_assigned_mission_items|submit_mission_answer|list_role_blueprints|get_role_blueprint|refresh_role_blueprint|export_role_hiring_pack|get_product_intelligence)$/;
+const LOCAL_NOISE_RE = /^(read_file|write_file|edit_file|view_file|write_to_file|replace_file_content|multi_replace_file_content|list_dir|find_by_name|grep_search|run_command|command_status|send_command_input|read_terminal|task_boundary|notify_user|manage_task|schedule|ask_question|Read|Write|Edit|MultiEdit|Glob|Grep|LS|Bash|Agent|Task|TodoWrite|NotebookEdit|apply_patch|shell|exec_command|write_stdin|replace|run_shell_command|list_directory|search_file_content|Shell|ReadFile|WriteFile|StrReplaceFile|Think)$/;
 
 function parseArgs(argv) {
   const out = {};
@@ -40,6 +40,7 @@ function writeOut(obj) {
 
 function noopFor(platform, event) {
   if (platform === 'antigravity') return event === 'turn-stop' ? { decision: 'stop' } : {};
+  if (platform === 'gemini') return {};
   return { continue: true };
 }
 
@@ -96,7 +97,7 @@ async function tryDeviceAuth({ platform, event, url }) {
     return await pollPendingDevice(pendingP, pending);
   }
   if (pending) rmSync(pendingP, { force: true });
-  if (event !== 'session-start' || process.platform !== 'darwin') return { token: '' };
+  if (event !== 'session-start' || !['darwin', 'win32', 'linux'].includes(process.platform)) return { token: '' };
   try {
     const sr = await fetch(`${url}/api/hooks/device/start`, { method: 'POST', signal: AbortSignal.timeout(2500) });
     if (!sr.ok) return { token: '' };
@@ -105,12 +106,24 @@ async function tryDeviceAuth({ platform, event, url }) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     writeFileSync(pendingP, JSON.stringify(nextP), { encoding: 'utf8', mode: 0o600 });
     try { chmodSync(pendingP, 0o600); } catch {}
-    if (process.env.SYMEA_DISABLE_OPEN !== '1') spawn('open', [sj.approve_url], { detached: true, stdio: 'ignore' }).unref();
+    if (process.env.SYMEA_DISABLE_OPEN !== '1') {
+      const [bin, cmdArgs] = process.platform === 'darwin'
+        ? ['open', [sj.approve_url]]
+        : process.platform === 'win32'
+          ? ['cmd', ['/c', 'start', '', sj.approve_url]]
+          : ['xdg-open', [sj.approve_url]];
+      spawn(bin, cmdArgs, { detached: true, stdio: 'ignore' }).unref();
+    }
     await new Promise(r => setTimeout(r, 3000));
     const quick = await pollPendingDevice(pendingP, nextP);
     if (quick.token) return quick;
-    const msg = 'Symea Brain: browser tab opened. Click Approve once to activate automatic hooks.';
-    return { token: '', notice: platform === 'antigravity' ? { injectSteps: [{ systemMessage: { systemMessage: msg } }] } : { continue: true, systemMessage: msg } };
+    const msg = 'SOL6 Brain: browser tab opened. Click Approve once to activate automatic hooks.';
+    const notice = platform === 'antigravity'
+      ? { injectSteps: [{ systemMessage: { systemMessage: msg } }] }
+      : platform === 'gemini'
+        ? { systemMessage: msg }
+        : { continue: true, systemMessage: msg };
+    return { token: '', notice };
   } catch {
     return { token: '' };
   }
@@ -149,8 +162,10 @@ function extractTailFromTranscript(transcriptPath) {
 
 function detectPlatform(args, payload) {
   const p = String(args.platform || process.env.SYMEA_HOOK_PLATFORM || '').toLowerCase();
-  if (['codex', 'claude', 'antigravity'].includes(p)) return p;
+  if (['codex', 'claude', 'antigravity', 'kimi', 'gemini'].includes(p)) return p;
   if (payload && (payload.hookEventName || payload.conversationId || 'lastUserInput' in payload)) return 'antigravity';
+  if (process.env.GEMINI_PROJECT_DIR || process.env.GEMINI_CLI || /^(beforeagent|afteragent|beforetool|aftertool)$/i.test(String(payload?.hook_event_name || ''))) return 'gemini';
+  if (process.env.KIMI_CODE_HOME || process.env.KIMI_HOOK_PATH || process.env.KIMI_SESSION_ID || process.env.KIMI_PLUGIN_ROOT) return 'kimi';
   if (process.env.PLUGIN_DATA || process.env.CODEX_HOME || process.env.CODEX_CI || process.env.CODEX_THREAD_ID || String(process.env.CLAUDE_PLUGIN_ROOT || '').includes('/.codex/')) return 'codex';
   if (process.env.CLAUDE_PLUGIN_ROOT || process.env.CLAUDE_PROJECT_DIR) return 'claude';
   return 'claude';
@@ -160,16 +175,16 @@ function detectEvent(args, payload) {
   if (args.event) return String(args.event).toLowerCase();
   const ev = String(payload?.hook_event_name || payload?.hookEventName || '').toLowerCase();
   if (ev === 'sessionstart') return 'session-start';
-  if (ev === 'userpromptsubmit' || ev === 'preinvocation') return 'prompt-submit';
-  if (ev === 'posttooluse') return 'post-connector';
-  if (ev === 'stop') return 'turn-stop';
+  if (ev === 'userpromptsubmit' || ev === 'preinvocation' || ev === 'beforeagent') return 'prompt-submit';
+  if (ev === 'posttooluse' || ev === 'aftertool') return 'post-connector';
+  if (ev === 'stop' || ev === 'afteragent') return 'turn-stop';
   return 'prompt-submit';
 }
 
 function isSkippedSymeaTool(toolName) {
   const raw = String(toolName || '').trim();
   if (!raw) return false;
-  if (/symea[-_]?brain/i.test(raw) || /^mcp__symea/i.test(raw)) return true;
+  if (/(?:symea|sol6)[-_]?brain/i.test(raw) || /^mcp__(?:symea|sol6)/i.test(raw)) return true;
   const tail = raw.includes('__') ? raw.split('__').pop() : raw.includes(':') ? raw.split(':').pop() : raw.includes('.') ? raw.split('.').pop() : raw;
   return SYMEA_TOOL_TAIL_RE.test(tail) || LOCAL_NOISE_RE.test(raw) || LOCAL_NOISE_RE.test(tail);
 }
@@ -234,9 +249,9 @@ async function main() {
       if (sticky.session_key && !outbound.session_key) outbound.session_key = sticky.session_key;
       writeSticky({ ...sticky, turns_left: Math.max(0, Number(sticky.turns_left) - 1) });
     }
-    if (!outbound.last_assistant_message || (!outbound.prompt && !outbound.lastUserInput)) {
-      const tail = extractTailFromTranscript(outbound.transcript_path || outbound.transcriptPath);
-      if (!outbound.last_assistant_message && tail.lastAssistant) outbound.last_assistant_message = tail.lastAssistant;
+    if ((!outbound.last_assistant_message && !outbound.prompt_response && !outbound.assistant_output) || (!outbound.prompt && !outbound.lastUserInput)) {
+      const tail = extractTailFromTranscript(outbound.transcript_path || outbound.transcriptPath || outbound.session_transcript_path);
+      if (!outbound.last_assistant_message && !outbound.prompt_response && !outbound.assistant_output && tail.lastAssistant) outbound.last_assistant_message = tail.lastAssistant;
       if (!outbound.prompt && !outbound.lastUserInput && tail.lastUser) outbound.prompt = tail.lastUser;
     }
   }
@@ -256,7 +271,7 @@ async function main() {
     if (event === 'prompt-submit') {
       const txt = JSON.stringify(json || {});
       const sm = /SKILL TREE \[([a-z0-9_-]+)/i.exec(txt);
-      const om = /\[(symea|syskern|amplify|elendil|unikkern)\//i.exec(txt);
+      const om = /\[(symea(?:_[a-z0-9]+)?|syskern|amplify|elendil|unikkern|k2_kastro)\//i.exec(txt);
       const nm = /(branches\/[a-z0-9._/-]+\.md|formulas\/[a-z0-9._/-]+\.js)/i.exec(txt);
       if (sm || om || nm) {
         writeSticky({
@@ -267,6 +282,11 @@ async function main() {
           turns_left: 6
         });
       }
+    }
+    if ((platform === 'kimi' || platform === 'gemini') && (json?.decision === 'block' || json?.decision === 'deny')) {
+      writeSync(2, `${json.reason || 'Blocked by SOL6 Brain'}\n`);
+      writeOut(json);
+      return process.exit(2);
     }
     writeOut(json && typeof json === 'object' ? json : noop);
   } catch {

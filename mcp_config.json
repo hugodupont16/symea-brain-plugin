@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "symea-brain": {
-      "serverUrl": "https://symea-brain-239495878487.europe-west2.run.app/mcp/symea",
+    "sol6-brain": {
+      "url": "https://brain.sol6.io/mcp/symea",
       "oauth": {
         "clientId": "2551b198-80d9-42bc-9f2c-b771d791d998"
       }

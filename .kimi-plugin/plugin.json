@@ -1,0 +1,17 @@
+{
+  "name": "symea-brain",
+  "displayName": "SOL6 Brain",
+  "version": "3.7.0",
+  "description": "SOL6 Brain compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+  "icon": "./assets/logo.png",
+  "logo": "./assets/logo.png",
+  "author": {
+    "name": "SOL6",
+    "url": "https://brain.sol6.io"
+  },
+  "homepage": "https://github.com/hugodupont16/symea-brain-plugin",
+  "repository": "https://github.com/hugodupont16/symea-brain-plugin",
+  "hooks": "./hooks/kimi-hooks.json",
+  "mcpServers": "./.mcp.kimi.json",
+  "skills": "./skills/"
+}

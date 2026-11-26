@@ -1,10 +1,13 @@
 {
   "name": "symea-brain",
-  "version": "3.0.0",
-  "description": "Symea Group compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+  "displayName": "SOL6 Brain",
+  "version": "3.7.0",
+  "description": "SOL6 Brain compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+  "icon": "./assets/logo.png",
+  "logo": "./assets/logo.png",
   "author": {
-    "name": "Symea Group",
-    "url": "https://symea-brain-239495878487.europe-west2.run.app"
+    "name": "SOL6",
+    "url": "https://brain.sol6.io"
   },
   "homepage": "https://github.com/hugodupont16/symea-brain-plugin",
   "repository": "https://github.com/hugodupont16/symea-brain-plugin",

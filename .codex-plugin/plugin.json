@@ -1,15 +1,16 @@
 {
   "name": "symea-brain",
-  "version": "3.0.0",
-  "description": "Symea Group compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
+  "version": "3.7.0",
+  "description": "SOL6 Brain compartment-governed corporate brain, Living Dossiers, trilingual PIM, and lifecycle hooks autopilot.",
   "author": {
-    "name": "Symea Group",
-    "url": "https://symea-brain-239495878487.europe-west2.run.app"
+    "name": "SOL6",
+    "url": "https://brain.sol6.io"
   },
   "homepage": "https://github.com/hugodupont16/symea-brain-plugin",
   "repository": "https://github.com/hugodupont16/symea-brain-plugin",
   "license": "Proprietary",
   "keywords": [
+    "sol6",
     "symea",
     "knowledge-graph",
     "pim",
@@ -19,10 +20,10 @@
   "skills": "./skills/",
   "hooks": "./hooks/claude-codex-hooks.json",
   "interface": {
-    "displayName": "Symea Brain",
-    "shortDescription": "Symea 5-Org Knowledge, Skill Trees & Hooks",
+    "displayName": "SOL6 Brain",
+    "shortDescription": "SOL6 Brain: 5-Org Knowledge, Skill Trees & Hooks",
     "longDescription": "Compartment-governed multi-org hybrid knowledge graph, Living Dossiers, fractal Skill Trees, deterministic formula sandbox, trilingual PIM, DNC outbound guard, and automatic lifecycle hook capture.",
-    "developerName": "Symea Group",
+    "developerName": "SOL6",
     "category": "Business & Operations",
     "capabilities": [
       "Interactive",
@@ -30,9 +31,9 @@
       "Write",
       "Lifecycle hooks"
     ],
-    "websiteURL": "https://symea-brain-239495878487.europe-west2.run.app",
+    "websiteURL": "https://brain.sol6.io",
     "defaultPrompt": [
-      "Search Symea Brain topic dossiers, Skill Trees, and product specs",
+      "Search SOL6 Brain topic dossiers, Skill Trees, and product specs",
       "Run a deterministic pricing/sizing formula with run_skill_formula",
       "Distill a rated deliverable or review staged Auto-Inbox decisions"
     ],
